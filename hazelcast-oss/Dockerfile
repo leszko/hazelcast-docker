@@ -50,6 +50,8 @@ RUN cd mvnw \
 # Set Pardot ID to 'docker'
 RUN echo 'hazelcastDownloadId=docker' > hazelcast-download.properties
 
+ADD hazelcast-gson-starter-1.2.2.jar ${HZ_HOME}/hazelcast-gson-starter-1.2.2.jar
+
 # Runtime constants
 ENV CLASSPATH_DEFAULT "${HZ_HOME}:${HZ_HOME}/*"
 ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true"
@@ -75,5 +77,5 @@ CMD ["bash", "-c", "set -euo pipefail \
       && echo \"# starting now....\" \
       && echo \"########################################\" \
       && set -x \
-      && exec java -server ${JAVA_OPTS} com.hazelcast.core.server.StartServer \
+      && exec java -server ${JAVA_OPTS} GsonStarter /data/hazelcast/hazelcast \
      "]
