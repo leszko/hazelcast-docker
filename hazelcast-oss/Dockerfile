@@ -50,6 +50,13 @@ RUN cd mvnw \
 # Set Pardot ID to 'docker'
 RUN echo 'hazelcastDownloadId=docker' > hazelcast-download.properties
 
+RUN mv /usr/lib/jvm/java-1.8-openjdk/jre/lib/logging.properties /usr/lib/jvm/java-1.8-openjdk/jre/lib/logging.properties.bak
+RUN echo "java.util.logging.ConsoleHandler.level = FINEST" >> /usr/lib/jvm/java-1.8-openjdk/jre/lib/logging.properties
+RUN echo ".level= FINEST" >> /usr/lib/jvm/java-1.8-openjdk/jre/lib/logging.properties
+RUN cat /usr/lib/jvm/java-1.8-openjdk/jre/lib/logging.properties.bak >> /usr/lib/jvm/java-1.8-openjdk/jre/lib/logging.properties
+RUN echo "java.util.logging.ConsoleHandler.level = FINEST" >> /usr/lib/jvm/java-1.8-openjdk/jre/lib/logging.properties
+RUN echo ".level= FINEST" >> /usr/lib/jvm/java-1.8-openjdk/jre/lib/logging.properties
+
 # Runtime constants
 ENV CLASSPATH_DEFAULT "${HZ_HOME}:${HZ_HOME}/*"
 ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true"
