@@ -15,7 +15,7 @@ ARG HZ_INSTALL_ZIP="hazelcast-enterprise-${HZ_VERSION}.zip"
 ARG HZ_INSTALL_DIR="${HZ_HOME}/${HZ_INSTALL_NAME}"
 
 # Install bash & curl
-RUN apk add --no-cache bash curl \
+RUN apk add --no-cache bash curl apr openssl \
  && rm -rf /var/cache/apk/*
 
 # Set up build directory
