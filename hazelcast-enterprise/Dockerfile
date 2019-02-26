@@ -1,7 +1,7 @@
 FROM openjdk:8u171-jre-alpine
 
 # Versions of Hazelcast and Hazelcast plugins
-ARG HZ_VERSION=3.11.1
+ARG HZ_VERSION=3.12-BETA-1
 ARG CACHE_API_VERSION=1.1.0
 ARG HZ_KUBE_VERSION=1.3.1
 ARG HZ_EUREKA_VERSION=1.0.2
@@ -61,7 +61,7 @@ ADD hazelcast.xml $HZ_HOME/hazelcast.xml
 RUN echo 'hazelcastDownloadId=docker' > hazelcast-download.properties
 
 # Runtime constants
-ENV CLASSPATH_DEFAULT "${HZ_HOME}:${HZ_INSTALL_DIR}/lib/${HZ_JAR}:${HZ_HOME}/*"
+ENV CLASSPATH_DEFAULT "${HZ_HOME}/hazelcast-kubernetes-1.3.2-SNAPSHOT.jar:${HZ_HOME}:${HZ_INSTALL_DIR}/lib/${HZ_JAR}:${HZ_HOME}/*"
 ENV JAVA_OPTS_DEFAULT "-Djava.net.preferIPv4Stack=true -Dhazelcast.mancenter.enabled=false"
 
 # Runtime environment variables
@@ -76,6 +76,8 @@ ENV JAVA_OPTS ""
 
 ### Expose port
 EXPOSE 5701
+
+COPY hazelcast-kubernetes-1.3.2-SNAPSHOT.jar ${HZ_HOME}/
 
 # Start Hazelcast server
 CMD ["bash", "-c", "set -euo pipefail \
