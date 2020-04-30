@@ -1,4 +1,4 @@
-FROM alpine:3.11
+FROM alpine:3.8 as builder
 
 # Versions of Hazelcast and Hazelcast plugins
 ARG HZ_VERSION=4.0.1
@@ -10,6 +10,30 @@ ARG JMX_PROMETHEUS_AGENT_VERSION=0.11.0
 ARG HZ_HOME="/opt/hazelcast"
 ARG HZ_JAR="hazelcast-all-${HZ_VERSION}.jar"
 ARG CACHE_API_JAR="cache-api-${CACHE_API_VERSION}.jar"
+
+# Install Hazelcast and plugins
+COPY dependency-copy.xml ${HZ_HOME}/
+RUN echo "Installing new APK packages" \
+    && apk add openjdk8-jre maven curl \
+    && echo "Installing Hazelcast" \
+    && mkdir -p ${HZ_HOME}/lib \
+    && curl -sf -o "${HZ_HOME}/lib/${HZ_JAR}" \
+         -L "https://repo1.maven.org/maven2/com/hazelcast/hazelcast-all/${HZ_VERSION}/${HZ_JAR}" \
+    && echo "Installing JCache" \
+    && curl -sf -o "${HZ_HOME}/lib/${CACHE_API_JAR}" \
+         -L "https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/${CACHE_API_JAR}" \
+    && echo "Installing JMX Prometheus Agent" \
+    && curl -sf -o "${HZ_HOME}/lib/jmx_prometheus_javaagent.jar" \
+         -L "https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${JMX_PROMETHEUS_AGENT_VERSION}/jmx_prometheus_javaagent-${JMX_PROMETHEUS_AGENT_VERSION}.jar" \
+    && echo "Installing Hazelcast plugins" \
+    && mvn -f ${HZ_HOME}/dependency-copy.xml \
+           -Dhazelcast-eureka-version=${HZ_EUREKA_VERSION} \
+           dependency:copy-dependencies
+
+FROM alpine:3.11
+
+# Build constants
+ARG HZ_HOME="/opt/hazelcast"
 
 # Runtime constants / variables
 ENV HZ_HOME="${HZ_HOME}" \
@@ -24,38 +48,23 @@ ENV HZ_HOME="${HZ_HOME}" \
 # Expose port
 EXPOSE 5701
 
-COPY *.xml *.sh *.yaml *.jar *.properties ${HZ_HOME}/
+COPY *.sh *.yaml *.jar *.properties ${HZ_HOME}/
+COPY --from=builder ${HZ_HOME}/lib/*.jar ${HZ_HOME}/lib/
 
 # Install
 RUN echo "Updating Alpine system" \
     && apk upgrade --update-cache --available \
     && echo "Installing new APK packages" \
-    && apk add openjdk11-jre maven bash curl procps nss \
-    && echo "Installing Hazelcast" \
+    && apk add openjdk11-jre bash curl procps nss \
+    && echo "Creating lib directory" \
     && cd "${HZ_HOME}" \
-    && mkdir lib \
-    && curl -sf -o ${HZ_HOME}/lib/${HZ_JAR} \
-         -L https://repo1.maven.org/maven2/com/hazelcast/hazelcast-all/${HZ_VERSION}/${HZ_JAR} \
-    && echo "Installing JCache" \
-    && curl -sf -o "${HZ_HOME}/lib/${CACHE_API_JAR}" \
-         -L "https://repo1.maven.org/maven2/javax/cache/cache-api/${CACHE_API_VERSION}/${CACHE_API_JAR}" \
-    && echo "Installing Hazelcast plugins" \
-    && mvn -f dependency-copy.xml \
-           -Dhazelcast-eureka-version=${HZ_EUREKA_VERSION} \
-           dependency:copy-dependencies \
-    && echo "Maven clean-up" \
-    && apk del maven \
-    && rm -rf ~/.m2 \
-    && rm -f dependency-copy.xml \
-    && echo "Installing JMX Prometheus Agent" \
-    && curl -sf -o "${HZ_HOME}/lib/jmx_prometheus_javaagent.jar" \
-         -L "https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${JMX_PROMETHEUS_AGENT_VERSION}/jmx_prometheus_javaagent-${JMX_PROMETHEUS_AGENT_VERSION}.jar" \
     && echo "Granting read permission to ${HZ_HOME}" \
     && chmod -R +r $HZ_HOME \
     && echo "Setting Pardot ID to 'docker'" \
     && echo 'hazelcastDownloadId=docker' > hazelcast-download.properties \
     && echo "Cleaning APK packages" \
     && rm -rf /var/cache/apk/*
+
 
 WORKDIR ${HZ_HOME}
 
