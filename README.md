@@ -1,6 +1,6 @@
 # Hazelcast Docker
 
-This rrepository contains Dockerfiles for the official Hazelcast Docker images.
+This repository contains Dockerfiles for the official Hazelcast Docker images.
 
 ## Quick Start
 
