@@ -5,9 +5,8 @@ pipeline {
             customWorkspace "${JOB_NAME}/${BUILD_NUMBER}"
         }
     }
-
-    parameters {
-        string(name: 'HAZELCAST_DOCKER_TAG', description: 'Hazelcast Docker Tag')
+    triggers {
+        pollScm('* * * * *')
     }
 
     stages {
