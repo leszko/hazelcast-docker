@@ -12,6 +12,7 @@ jobs:
         uses: actions/checkout@v2
 
       - run: docker build hazelcast-oss -t leszko/hazelcast:123
+      - run: docker build hazelcast-enterprise -t leszko/hazelcast-enterprise:123
 
       - name: Scan Hazelcast image by Azure (Trivy + Dockle)
         uses: Azure/container-scan@v0
@@ -21,3 +22,12 @@ jobs:
         uses: anchore/scan-action@v1
         with:
           image-reference: leszko/hazelcast:123
+
+      - name: Scan Hazelcast Enterprise image by Azure (Trivy + Dockle)
+        uses: Azure/container-scan@v0
+        with:
+          image-name: leszko/hazelcast-enterprise:123
+      - name: Scan Hazelcast Enterprise image by Anchore
+        uses: anchore/scan-action@v1
+        with:
+          image-reference: leszko/hazelcast-enterprise:123
